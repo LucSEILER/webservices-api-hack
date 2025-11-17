@@ -26,7 +26,7 @@ function authMiddleware(req, res, next) {
 
 function requireAdminAccess(req, res, next) {
   authMiddleware(req, res, () => {
-    if (req.user.role !== "admin") {
+    if (!req.user || req.user.isAdmin !== true) {
       return res.status(403).json({ message: "Forbidden: Admin only" });
     }
     next();
