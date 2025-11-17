@@ -49,7 +49,7 @@ const bookRoutes = {
       path: "users/:id",
       method: "put",
       handler: require("./v1/users/put_user"),
-      middlewares: [requireAdminAccess, validateBody(userSchema)],
+      middlewares: [],
       limiters: limiters.NONE,
     },
   ],
