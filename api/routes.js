@@ -1,5 +1,5 @@
 const rateLimit = require("express-rate-limit");
-const requireAdminAccess = require("../middlewares/requireAdminAccess");
+const { authMiddleware, requireAdminAccess } = require("../middlewares/requireAdminAccess");
 const validateBody = require("../middlewares/validateBody");
 const bookSchema = require("../schemas/book");
 
@@ -27,14 +27,14 @@ const bookRoutes = {
       path: "books",
       method: "post",
       handler: require("./v1/books/post_book"),
-      middlewares: [requireAdminAccess, validateBody(bookSchema)],
+      middlewares: [authMiddleware, validateBody(bookSchema)],
       limiters: limiters.NONE,
     },
     {
       path: "books/:id",
       method: "put",
       handler: require("./v1/books/put_book"),
-      middlewares: [requireAdminAccess, validateBody(bookSchema)],
+      middlewares: [authMiddleware, validateBody(bookSchema)],
       limiters: limiters.NONE,
     },
     {
@@ -44,6 +44,11 @@ const bookRoutes = {
       middlewares: [requireAdminAccess],
       limiters: limiters.NONE,
     },
+    {
+      path: "auth/login",
+      method: "post",
+      handler: require("./v1/auth/login"),
+    }
   ],
 };
 
@@ -52,12 +57,13 @@ module.exports = function (app) {
     for (const route of bookRoutes[version]) {
       const middlewares = route.middlewares || [];
       console.log(`Registering route: ${route.method.toUpperCase()} /api/${version}/${route.path}`);
-      app[route.method](
-        `/api/${version}/${route.path}`,
-        route.limiters,
-        ...middlewares,
-        route.handler
-      );
+
+      const handlers = [];
+      handlers.push(route.limiters || limiters.NONE);
+      handlers.push(...middlewares);
+      handlers.push(route.handler);
+
+      app[route.method](`/api/${version}/${route.path}`, ...handlers);
     }
   }
 };
