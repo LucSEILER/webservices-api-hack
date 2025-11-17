@@ -52,6 +52,7 @@ const bookRoutes = {
       path: "users",
       method: "get",
       handler: require("./v1/users/get_users"),
+      middlewares: [requireAdminAccess],
       limiters: limiters.FIVE_SECONDS,
     },
     {
@@ -63,7 +64,7 @@ const bookRoutes = {
       path: "users/:id",
       method: "delete",
       handler: require("./v1/users/deleteUser"),
-      middlewares: [requireAdminAccess],
+      middlewares: [],
       limiters: limiters.NONE,
     },
     {
