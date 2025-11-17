@@ -59,6 +59,13 @@ const bookRoutes = {
       method: "post",
       handler: require("./v1/users/addUser"),
     },
+     {
+      path: "users/:id",
+      method: "delete",
+      handler: require("./v1/users/deleteUser"),
+      middlewares: [requireAdminAccess],
+      limiters: limiters.NONE,
+    },
     {
       path: "auth/login",
       method: "post",
