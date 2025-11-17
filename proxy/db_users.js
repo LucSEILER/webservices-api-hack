@@ -7,6 +7,9 @@ module.exports = {
   getById: async (id) => {
     return users.find((b) => b.id === id);
   },
+  getByUsername: async (username) => {
+    return users.find((b) => b.username === username);
+  },
   create: async (user) => {
     users.push(user);
     return user;
