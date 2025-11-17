@@ -9,8 +9,6 @@ module.exports = async (req, res) => {
 
   const book = await db_books.getById(id);
 
-  console.log(book);
-
   if (!book) {
     return res.status(404).json({ message: "Book not found" });
   }

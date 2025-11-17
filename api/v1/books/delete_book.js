@@ -4,8 +4,13 @@ module.exports = async (req, res) => {
   const id = parseInt(req.params.id);
 
   try {
-    const deletedBook = await db_books.deleteById(id);
-    return res.json({ message: "Livre supprimé", deleted: deletedBook[0] });
+    const book = await db_books.getById(id);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found." });
+    }
+    
+    await db_books.deleteById(id);
+    return res.json({ message: "Book deleted" });
   } catch (err) {
     return res.status(404).json({ message: "Delete book error" });
   }
