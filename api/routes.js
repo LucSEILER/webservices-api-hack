@@ -1,0 +1,98 @@
+const rateLimit = require("express-rate-limit");
+const requireAdminAccess = require("../middlewares/requireAdminAccess");
+const validateBody = require("../middlewares/validateBody");
+const bookSchema = require("../schemas/book");
+
+const limiters = {
+  NONE: (req, res, next) => next(),
+  ONE_SECOND: rateLimit({ windowMs: 1000, max: 1 }),
+  FIVE_SECONDS: rateLimit({ windowMs: 5000, max: 1 }),
+};
+
+const bookRoutes = {
+  v1: [
+    {
+      path: "books",
+      method: "get",
+      handler: require("./v1/books/get_books"),
+      limiters: limiters.ONE_SECOND,
+    },
+    {
+      path: "books/:id",
+      method: "get",
+      handler: require("./v1/books/get_book"),
+      limiters: limiters.NONE,
+    },
+    {
+      path: "books",
+      method: "post",
+      handler: require("./v1/books/post_book"),
+      middlewares: [requireAdminAccess, validateBody(bookSchema)],
+      limiters: limiters.NONE,
+    },
+    {
+      path: "books/:id",
+      method: "put",
+      handler: require("./v1/books/put_book"),
+      middlewares: [requireAdminAccess, validateBody(bookSchema)],
+      limiters: limiters.NONE,
+    },
+    {
+      path: "books/:id",
+      method: "delete",
+      handler: require("./v1/books/delete_book"),
+      middlewares: [requireAdminAccess],
+      limiters: limiters.NONE,
+    },
+  ],
+  v2: [
+    {
+      path: "books",
+      method: "get",
+      handler: require("./v2/books/get_books"),
+      limiters: limiters.FIVE_SECONDS,
+    },
+    {
+      path: "books/:id",
+      method: "get",
+      handler: require("./v2/books/get_book"),
+      limiters: limiters.NONE,
+    },
+    {
+      path: "books",
+      method: "post",
+      handler: require("./v2/books/post_book"),
+      middlewares: [requireAdminAccess, validateBody(bookSchema)],
+      limiters: limiters.NONE,
+    },
+    {
+      path: "books/:id",
+      method: "put",
+      handler: require("./v2/books/put_book"),
+      middlewares: [requireAdminAccess, validateBody(bookSchema)],
+      limiters: limiters.NONE,
+    },
+    {
+      path: "books/:id",
+      method: "delete",
+      handler: require("./v2/books/delete_book"),
+      middlewares: [requireAdminAccess],
+      limiters: limiters.NONE,
+    },
+  ],
+};
+
+module.exports = function (app) {
+  for (const version in bookRoutes) {
+    for (const route of bookRoutes[version]) {
+      const middlewares = route.middlewares || [];
+      console.log(`Registering route: ${route.method.toUpperCase()} /api/${version}/${route.path}`);
+      app[route.method](
+        `/api/${version}/${route.path}`,
+        route.limiters,
+        ...middlewares,
+        route.handler
+      );
+    }
+  }
+};
