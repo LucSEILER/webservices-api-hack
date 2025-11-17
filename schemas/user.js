@@ -10,4 +10,10 @@ const userCreateSchema = Joi.object({
     password: Joi.string().min(1).max(100).required(),
 });
 
-module.exports = { userSchema, userCreateSchema };
+const userUpdateSchema = Joi.object({
+    username: Joi.string().trim().min(1).max(30).required(),
+    password: Joi.string().min(1).max(100).required(),
+    isAdmin: Joi.boolean().required(),
+});
+
+module.exports = { userSchema, userCreateSchema, userUpdateSchema };

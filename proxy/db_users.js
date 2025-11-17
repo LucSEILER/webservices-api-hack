@@ -7,6 +7,10 @@ module.exports = {
   getById: async (id) => {
     return users.find((b) => b.id === id);
   },
+  getNextId: async () => {
+    if (users.length === 0) return 1;
+    return Math.max(...users.map((u) => u.id)) + 1;
+  },
   getByUsername: async (username) => {
     return users.find((b) => b.username === username);
   },
