@@ -5,7 +5,7 @@ const {
 } = require("../middlewares/requireAdminAccess");
 const validateBody = require("../middlewares/validateBody");
 const bookSchema = require("../schemas/book");
-const userSchema = require("../schemas/user");
+const { userSchema, userCreateSchema } = require("../schemas/user");
 
 const limiters = {
   NONE: (req, res, next) => next(),
@@ -56,9 +56,17 @@ const bookRoutes = {
       limiters: limiters.FIVE_SECONDS,
     },
     {
-      path: "users",
+      path: "auth/register",
       method: "post",
-      handler: require("./v1/users/addUser"),
+      middlewares: [validateBody(userCreateSchema)],
+      handler: require("./v1/auth/register"),
+    },
+     {
+      path: "users/:id",
+      method: "delete",
+      handler: require("./v1/users/deleteUser"),
+      middlewares: [authMiddleware],
+      limiters: limiters.NONE,
     },
      {
       path: "users/:id",
@@ -70,13 +78,14 @@ const bookRoutes = {
     {
       path: "auth/login",
       method: "post",
+      middlewares: [validateBody(userSchema)],
       handler: require("./v1/auth/login"),
     },
     {
       path: "users/:id",
       method: "put",
       handler: require("./v1/users/put_user"),
-      middlewares: [],
+      middlewares: [validateBody(userSchema)],
       limiters: limiters.NONE,
     },
   ],
