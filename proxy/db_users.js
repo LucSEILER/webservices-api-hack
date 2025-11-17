@@ -12,6 +12,7 @@ module.exports = {
     return user;
   },
   updateById: async (id, user) => {
+    user.id = id;
     const userIndex = users.findIndex((b) => b.id === id);
     if (userIndex === -1) {
       throw "user not found";
