@@ -5,3 +5,5 @@ let userMockedDB = [
   { id: 4, username: "dave", password: "dave", isAdmin: false },
   { id: 5, username: "eve", password: "eve", isAdmin: false },
 ];
+
+module.exports = userMockedDB;

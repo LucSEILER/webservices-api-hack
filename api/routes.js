@@ -2,6 +2,7 @@ const rateLimit = require("express-rate-limit");
 const { authMiddleware, requireAdminAccess } = require("../middlewares/requireAdminAccess");
 const validateBody = require("../middlewares/validateBody");
 const bookSchema = require("../schemas/book");
+const userSchema = require("../schemas/user");
 
 const limiters = {
   NONE: (req, res, next) => next(),
@@ -48,7 +49,14 @@ const bookRoutes = {
       path: "auth/login",
       method: "post",
       handler: require("./v1/auth/login"),
-    }
+    },
+    {
+      path: "users/:id",
+      method: "put",
+      handler: require("./v1/users/put_user"),
+      middlewares: [requireAdminAccess, validateBody(userSchema)],
+      limiters: limiters.NONE,
+    },
   ],
 };
 
