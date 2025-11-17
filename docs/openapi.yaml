@@ -1,28 +1,42 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: Books API
+  title: Web Services Books API
   version: 1.0.0
+  description: |
+    REST API that exposes books, users and authentication services for the
+    webservices-api-hack project. This document describes the **v1** surface
+    that is currently implemented in the repository.
 servers:
   - url: http://localhost:3000/api/v1
-    description: Books API v1
-  - url: http://localhost:3000/api/v2
-    description: Books API v2
+    description: Local development
+tags:
+  - name: Books
+    description: Public catalogue endpoints
+  - name: Users
+    description: Basic user management helpers
+  - name: Auth
+    description: Token-based authentication
 
 paths:
   /books:
     get:
-      summary: Get all books
+      tags: [Books]
+      summary: List every book
+      description: Returns the current in-memory catalogue along with HATEOAS links.
       responses:
         '200':
-          description: A list of books
+          description: Books retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Book'
+                $ref: '#/components/schemas/BooksResponse'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
     post:
+      tags: [Books]
       summary: Create a new book
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -35,33 +49,38 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Book'
+                $ref: '#/components/schemas/BookSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
+
   /books/{id}:
+    parameters:
+      - $ref: '#/components/parameters/BookIdPathParam'
     get:
-      summary: Get a book by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+      tags: [Books]
+      summary: Get details for a single book
       responses:
         '200':
-          description: A single book
+          description: Book retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Book'
+                $ref: '#/components/schemas/BookDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Book not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
     put:
-      summary: Update a book by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+      tags: [Books]
+      summary: Update a book
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -74,59 +93,355 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Book'
+                $ref: '#/components/schemas/BookSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Book not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
     delete:
-      summary: Delete a book by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+      tags: [Books]
+      summary: Delete a book
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Book deleted successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  deleted:
-                    $ref: '#/components/schemas/Book'
+                $ref: '#/components/schemas/DeleteBookResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Book not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List every registered user
+      description: Returns the full mocked user list. This endpoint is intentionally unsecured for demo purposes.
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersResponse'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
+    post:
+      tags: [Users]
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
+
+  /users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UserIdPathParam'
+    put:
+      tags: [Users]
+      summary: Update a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateInput'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPrivate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteUserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Generate a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/UnexpectedError'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    BookIdPathParam:
+      in: path
+      name: id
+      required: true
+      description: Identifier of the book
+      schema:
+        type: integer
+        minimum: 1
+    UserIdPathParam:
+      in: path
+      name: id
+      required: true
+      description: Identifier of the user
+      schema:
+        type: integer
+        minimum: 1
+
+  responses:
+    BadRequest:
+      description: Invalid request payload
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Authenticated but not allowed to perform the action
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnexpectedError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
   schemas:
-    Book:
+    BookSummary:
       type: object
       properties:
-        id:
-          type: integer
         title:
           type: string
+          example: Dune
         author:
           type: string
+          example: El Chupacabra
+      required: [title, author]
     BookInput:
+      allOf:
+        - $ref: '#/components/schemas/BookSummary'
+    BookDetailsResponse:
       type: object
       properties:
-        title:
+        book:
+          $ref: '#/components/schemas/BookSummary'
+        links:
+          $ref: '#/components/schemas/BookLinks'
+      required: [book, links]
+    BooksResponse:
+      type: object
+      properties:
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookSummary'
+        links:
+          $ref: '#/components/schemas/CollectionLinks'
+      required: [books, links]
+    DeleteBookResponse:
+      type: object
+      properties:
+        message:
           type: string
-        author:
+          example: Livre supprimé
+        deleted:
+          $ref: '#/components/schemas/BookDeleted'
+      required: [message, deleted]
+    BookDeleted:
+      allOf:
+        - $ref: '#/components/schemas/BookSummary'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 4
+    BookLinks:
+      type: object
+      properties:
+        self:
+          $ref: '#/components/schemas/Link'
+        collection:
+          $ref: '#/components/schemas/Link'
+        update:
+          $ref: '#/components/schemas/Link'
+        delete:
+          $ref: '#/components/schemas/Link'
+    CollectionLinks:
+      type: object
+      properties:
+        self:
+          $ref: '#/components/schemas/Link'
+        create:
+          $ref: '#/components/schemas/Link'
+    Link:
+      type: object
+      properties:
+        href:
           type: string
-      required:
-        - title
-        - author
+          example: /api/v1/books/1
+        method:
+          type: string
+          example: GET
+      required: [href, method]
+
+    UserPublic:
+      type: object
+      properties:
+        username:
+          type: string
+          example: ElChupacabra
+        password:
+          type: string
+          example: MyPassword
+      required: [username, password]
+    UserPrivate:
+      allOf:
+        - $ref: '#/components/schemas/UserPublic'
+        - type: object
+      required: [username, password]
+    UserInput:
+      allOf:
+        - $ref: '#/components/schemas/UserPublic'
+    UserUpdateInput:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+    UsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/UserPrivate'
+              - type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+      required: [users]
+    DeleteUserResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Utilisateur supprimé
+        deleted:
+          $ref: '#/components/schemas/UserDeleted'
+      required: [message, deleted]
+    UserDeleted:
+      allOf:
+        - $ref: '#/components/schemas/UserPrivate'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 2
+
+    LoginInput:
+      type: object
+      properties:
+        username:
+          type: string
+          example: InputTheUsername
+        password:
+          type: string
+          example: TheUsernameIsELCHUPACABRA
+      required: [username, password]
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Signed JWT token
+      required: [token]
 
     ErrorResponse:
       type: object
       properties:
         message:
           type: string
-      required:
-        - message
+          example: Invalid credentials
+      required: [message]
         
