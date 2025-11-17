@@ -60,6 +60,13 @@ const bookRoutes = {
       middlewares: [validateBody(userCreateSchema)],
       handler: require("./v1/auth/register"),
     },
+     {
+      path: "users/:id",
+      method: "delete",
+      handler: require("./v1/users/deleteUser"),
+      middlewares: [authMiddleware],
+      limiters: limiters.NONE,
+    },
     {
       path: "auth/login",
       method: "post",
