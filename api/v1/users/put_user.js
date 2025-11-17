@@ -3,7 +3,6 @@ const db_users = require("../../../proxy/db_users");
 module.exports = async (req, res) => {
   const id = parseInt(req.params.id);
 
-  username;
   if (!req.body || typeof req.body.username === "undefined" || typeof req.body.username !== "string") {
     return res.status(400).json({ message: "Le champ username est requis et doit être une chaîne de caractères." });
   } else {
