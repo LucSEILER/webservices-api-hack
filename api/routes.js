@@ -44,11 +44,6 @@ const bookRoutes = {
       middlewares: [requireAdminAccess],
       limiters: limiters.NONE,
     },
-  ],
-};
-
-const userRoutes = {
-  v1: [
     {
       path: "users",
       method: "get",
@@ -77,18 +72,4 @@ module.exports = function (app) {
       );
     }
   }
-
-    for (const version in userRoutes) {
-    for (const route of userRoutes[version]) {
-      const middlewares = route.middlewares || [];
-      console.log(`Registering route: ${route.method.toUpperCase()} /api/${version}/${route.path}`);
-      app[route.method](
-        `/api/${version}/${route.path}`,
-        route.limiters,
-        ...middlewares,
-        route.handler
-      );
-    }
-  }
 };
-
