@@ -13,6 +13,7 @@ module.exports = async (req, res) => {
       return res.status(403).json({ message: "You can only delete your own account" });
     }
 
+
     const deletedUser = await db_users.deleteById(id);
     return res.json({ message: "Utilisateur supprimé", deleted: deletedUser[0] });
   } catch (err) {
