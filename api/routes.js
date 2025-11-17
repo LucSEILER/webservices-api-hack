@@ -47,6 +47,23 @@ const bookRoutes = {
   ],
 };
 
+const userRoutes = {
+  v1: [
+    {
+      path: "users",
+      method: "get",
+      handler: require("./v1/users/get_users"),
+      limiters: limiters.FIVE_SECONDS,
+    },
+     {
+      path: "users",
+      method: "post",
+      handler: require("./v1/users/addUser"),
+      limiters: limiters.NONE,
+    },
+  ],
+};
+
 module.exports = function (app) {
   for (const version in bookRoutes) {
     for (const route of bookRoutes[version]) {
@@ -60,4 +77,18 @@ module.exports = function (app) {
       );
     }
   }
+
+    for (const version in userRoutes) {
+    for (const route of userRoutes[version]) {
+      const middlewares = route.middlewares || [];
+      console.log(`Registering route: ${route.method.toUpperCase()} /api/${version}/${route.path}`);
+      app[route.method](
+        `/api/${version}/${route.path}`,
+        route.limiters,
+        ...middlewares,
+        route.handler
+      );
+    }
+  }
 };
+
