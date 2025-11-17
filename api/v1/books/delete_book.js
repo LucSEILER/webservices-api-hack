@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
 
   try {
     const deletedBook = await db_books.deleteById(id);
-    return res.json({ message: "Book deleted", deleted: deletedBook[0] });
+    return res.json({ message: "Livre supprimé", deleted: deletedBook[0] });
   } catch (err) {
     return res.status(404).json({ message: "Delete book error" });
   }

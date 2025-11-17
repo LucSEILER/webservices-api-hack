@@ -10,5 +10,10 @@ module.exports = async (req, res) => {
 
   const newBook = await db_books.create({ title, author });
 
-  res.status(201).json(newBook);
+  const bookDto = {
+    title: newBook.title,
+    author: newBook.author,
+  };
+
+  res.status(201).json(bookDto);
 };

@@ -10,7 +10,11 @@ module.exports = async (req, res) => {
 
   try {
     const updatedBook = await db_books.updateById(id, { title, author });
-    res.json(updatedBook);
+    const bookDto = {
+      title: updatedBook.title,
+      author: updatedBook.author,
+    };
+    res.json(bookDto);
   } catch (err) {
     return res.status(404).json({ message: "Update book error: " + err });
   }
